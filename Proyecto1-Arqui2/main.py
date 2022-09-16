@@ -52,11 +52,21 @@ def binomial_dist(n, k, p):
 
 def write_back(mem_block, data, processor):
     if(mem_block is not None):
-        if(processor == P1):
-            if(mem_block == "0x000"):
-                processor[0][3] = data
-                processor[0][2] = "0x000"
-            
+        if(mem_block == "0x000" or mem_block == "0x100"):
+            processor[0][3] = data
+            processor[0][2] = "0x000"
+        elif(mem_block == "0x001" or mem_block == "0x101"):
+            processor[0][3] = data
+            processor[0][2] = "0x001"
+        elif(mem_block == "0x010" or mem_block == "0x110"):
+            processor[0][3] = data
+            processor[0][2] = "0x010"
+        elif(mem_block == "0x011" or mem_block == "0x111"):
+            processor[0][3] = data
+            processor[0][2] = "0x011"
+    else:
+        print("This didn't work")
+        
 
 if __name__ == '__main__':
     print('\n'.join([''.join(['{:4}'.format(item) for item in row]) 
