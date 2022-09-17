@@ -48,6 +48,49 @@ def binomial_dist(n, k, p):
     dist = bincoeff(n, k) * (p ** k) * ((1 - p) ** (n - k))
     return dist
 
+def state_change(current_state, action, processor, row):
+    if(current_state == "I"):
+        if(action == "Read"):
+            processor[row][1] = "S"
+        elif(action == "Write"):
+            processor[row][1] = "M"
+    elif(current_state == "S"):
+        if(action == "WriteCache"):
+            processor[row][1] = "I"
+        elif(action == "Write"):
+            processor[row][1] = "M"
+    elif(current_state == "M"):
+        if(action == "WriteCache"):
+            processor[row][1] = "I"
+    elif(current_state == "E"):
+        if(action == "WriteCache"):
+            processor[row][1] = "I"
+        elif(action == "Write"):
+            processor[row][1] = "M"
+        elif(action == "ReadCache"):
+            processor[row][1] = "S"
+
+def read_inst(mem_block, data, processor):
+    if(mem_block is not None):
+        if(mem_block == "0x000" or mem_block == "0x100"):
+            processor[0][1] = "M"
+            processor[0][3] = data
+            processor[0][2] = "0x000"
+        elif(mem_block == "0x001" or mem_block == "0x101"):
+            processor[1][1] = "M"
+            processor[1][3] = data
+            processor[1][2] = "0x001"
+        elif(mem_block == "0x010" or mem_block == "0x110"):
+            processor[2][1] = "M"
+            processor[2][3] = data
+            processor[2][2] = "0x010"
+        elif(mem_block == "0x011" or mem_block == "0x111"):
+            processor[3][1] = "M"
+            processor[3][3] = data
+            processor[3][2] = "0x011"
+    else:
+        print("This didn't work")
+
 def write_back(mem_block, data, processor):
     if(mem_block is not None):
         if(mem_block == "0x000" or mem_block == "0x100"):
