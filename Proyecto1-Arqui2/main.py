@@ -15,7 +15,6 @@ Memory = {"0x000": 0, "0x001": 0, "0x010": 0, "0x011": 0, "0x100": 0, "0x101": 0
 Instructions = {0: "P0: READ 0100", 1: "P1: CALC", 2: "P2: WRITE 1010, 4A3B", 3: "P3: CALC"}
 readMiss = 0
 writeMiss = 0
-Processors = {P1, P2, P3, P4}
 
 # def five_seconds():
 #     time.sleep(5)
@@ -73,30 +72,43 @@ def state_change(current_state, action, processor, row):
         elif(action == "ReadCache"):
             processor[row][1] = "S"
 
-def read_inst(mem_block, data, processor):
+def read_memory(mem_block, processor):
+    print("That will work!")
+
+def read_inst(mem_block, processor):
+    global readMiss
     for i in range(4):
-        for j in range(4):
-            if (P1[i][j] == mem_block):
-                processor[i][j] = data
+        if (P1[i][2] == mem_block and P1[i][1] == "E"):
+            processor[i][3] = P1[i][3]
+            if(processor != P1):
+                readMiss += 1
+            else:
+                readMiss += 0
+        elif (P2[i][2] == mem_block and P2[i][1] == "E"):
+            processor[i][3] = P2[i][3]
+            if(processor != P2):
+                readMiss += 1
+            else:
+                readMiss += 0
+        elif (P3[i][2] == mem_block and P3[i][1] == "E"):
+            processor[i][3] = P3[i][3]
+            if(processor != P3):
+                readMiss += 1
+            else:
+                readMiss += 0
+        elif (P4[i][2] == mem_block and P4[i][1] == "E"):
+            processor[i][3] = P4[i][3]
+            if(processor != P4):
+                readMiss += 1
+            else:
+                readMiss += 0
+        else:
+            read_memory(mem_block, processor)
+            break
 
 def write_back(mem_block, data, processor):
     if(mem_block is not None):
-        if(mem_block == "0x000" or mem_block == "0x100"):
-            processor[0][1] = "M"
-            processor[0][3] = data
-            processor[0][2] = "0x000"
-        elif(mem_block == "0x001" or mem_block == "0x101"):
-            processor[1][1] = "M"
-            processor[1][3] = data
-            processor[1][2] = "0x001"
-        elif(mem_block == "0x010" or mem_block == "0x110"):
-            processor[2][1] = "M"
-            processor[2][3] = data
-            processor[2][2] = "0x010"
-        elif(mem_block == "0x011" or mem_block == "0x111"):
-            processor[3][1] = "M"
-            processor[3][3] = data
-            processor[3][2] = "0x011"
+        print("Worked")
     else:
         print("This didn't work")
         
@@ -104,8 +116,9 @@ def write_back(mem_block, data, processor):
 if __name__ == '__main__':
     print('\n'.join([''.join(['{:4}'.format(item) for item in row]) 
       for row in P2]))
-    write_back("0x010", Memory["0x010"], P2)
+    read_inst("0x101", P2)
     print('\n'.join([''.join(['{:4}'.format(item) for item in row]) 
       for row in P2]))
+    print(readMiss)
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
