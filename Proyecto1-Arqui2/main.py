@@ -15,6 +15,8 @@ Memory = {"0x000": 0, "0x001": 0, "0x010": 0, "0x011": 0, "0x100": 0, "0x101": 0
 Instructions = {0: "P0: READ 0100", 1: "P1: CALC", 2: "P2: WRITE 1010, 4A3B", 3: "P3: CALC"}
 readMiss = 0
 writeMiss = 0
+readHit = 0
+writeHit = 0
 
 # def five_seconds():
 #     time.sleep(5)
@@ -50,6 +52,14 @@ def binomial_dist(n, k, p):
     dist = bincoeff(n, k) * (p ** k) * ((1 - p) ** (n - k))
     return dist
 
+def write_back(mem_block, data):
+    if(mem_block is not None):
+        for key in Memory:
+            if(mem_block == key):
+                Memory[key] = data
+    else:
+        print("This didn't work")
+
 def state_change(current_state, action, processor, row):
     if(current_state == "I"):
         if(action == "Read"):
@@ -64,6 +74,10 @@ def state_change(current_state, action, processor, row):
     elif(current_state == "M"):
         if(action == "WriteCache"):
             processor[row][1] = "I"
+            write_back(processor[row][2], processor[row][3])
+        elif(action == "ReadCache"):
+            processor[row][1] = "S"
+            write_back(processor[row][2], processor[row][3])
     elif(current_state == "E"):
         if(action == "WriteCache"):
             processor[row][1] = "I"
@@ -72,51 +86,96 @@ def state_change(current_state, action, processor, row):
         elif(action == "ReadCache"):
             processor[row][1] = "S"
 
-def read_memory(mem_block, processor):
-    print("That will work!")
+def read_memory(mem_block, processor, row):
+    for key in Memory:
+        if (key == mem_block):
+            if(key == "0x000" or key == "0x100"):
+                processor[0][2] = key
+                processor[0][3] = Memory[key] 
+            elif(key == "0x001" or key == "0x101"):
+                processor[1][2] = key
+                processor[1][3] = Memory[key] 
+            elif(key == "0x010" or key == "0x110"):
+                processor[2][2] = key
+                processor[2][3] = Memory[key] 
+            elif(key == "0x011" or key == "0x111"):
+                processor[3][2] = key
+                processor[3][3] = Memory[key] 
+            else:
+                print("Key not found!")
+        else:
+            print("Key not compatible!")
+
+def write_inst(mem_block, processor, data):
+    global writeMiss
+    global writeHit
+    for i in range(4):
+        if (P1[i][2] == mem_block):
+            P1[i][3] = data
+            if(processor != P1):
+                writeMiss += 1
+            else:
+                writeHit += 1
+        elif (P2[i][2] == mem_block):
+            P2[i][3] = data
+            if(processor != P2):
+                writeMiss += 1
+            else:
+                writeHit += 1
+        elif (P3[i][2] == mem_block):
+            P3[i][3] = data
+            if(processor != P3):
+                writeMiss += 1
+            else:
+                writeHit += 1
+        elif (P4[i][2] == mem_block):
+            P4[i][3] = data
+            if(processor != P4):
+                writeMiss += 1
+            else:
+                writeHit += 1
+        else:
+            writeMiss += 1
+            break
 
 def read_inst(mem_block, processor):
     global readMiss
+    global readHit
     for i in range(4):
         if (P1[i][2] == mem_block and P1[i][1] == "E"):
             processor[i][3] = P1[i][3]
             if(processor != P1):
                 readMiss += 1
             else:
-                readMiss += 0
+                readHit += 1
         elif (P2[i][2] == mem_block and P2[i][1] == "E"):
             processor[i][3] = P2[i][3]
             if(processor != P2):
                 readMiss += 1
             else:
-                readMiss += 0
+                readHit += 1
         elif (P3[i][2] == mem_block and P3[i][1] == "E"):
             processor[i][3] = P3[i][3]
             if(processor != P3):
                 readMiss += 1
             else:
-                readMiss += 0
+                readHit += 1
         elif (P4[i][2] == mem_block and P4[i][1] == "E"):
             processor[i][3] = P4[i][3]
             if(processor != P4):
                 readMiss += 1
             else:
-                readMiss += 0
+                readHit += 1
         else:
-            read_memory(mem_block, processor)
+            readMiss += 1
+            read_memory(mem_block, processor, i)
             break
-
-def write_back(mem_block, data, processor):
-    if(mem_block is not None):
-        print("Worked")
-    else:
-        print("This didn't work")
         
 
 if __name__ == '__main__':
     print('\n'.join([''.join(['{:4}'.format(item) for item in row]) 
       for row in P2]))
-    read_inst("0x101", P2)
+    read_inst("0x100", P2)
     print('\n'.join([''.join(['{:4}'.format(item) for item in row]) 
       for row in P2]))
     print(readMiss)
