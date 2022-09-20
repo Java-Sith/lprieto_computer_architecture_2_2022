@@ -118,39 +118,21 @@ def write_inst(mem_block, processor, data):
     global writeMiss
     global writeHit
     for i in range(4):
-        if (P0[i][2] == mem_block):
-            P0[i][3] = data
-            if(processor != P0):
-                writeMiss += 1
-            else:
-                writeHit += 1
+        if(processor[i][2] == mem_block):
+            processor[i][3] = data
+            writeHit += 1
             return i, False
-    for i in range(4):
-        if (P1[i][2] == mem_block):
-            P1[i][3] = data
-            if(processor != P1):
+        else:
+            if(processor[i][2] == "I"):
+                processor[i][3] = data
                 writeMiss += 1
-            else:
-                writeHit += 1
-            return i, False
-    for i in range(4):
-        if (P2[i][2] == mem_block):
-            P2[i][3] = data
-            if(processor != P2):
+                return i, False
+            elif(processor[i][2] == "S" or processor[i][2] == "M"):
+                processor[i][3] = data
                 writeMiss += 1
+                return i, False
             else:
-                writeHit += 1
-            return i, False
-    for i in range(4):
-        if (P3[i][2] == mem_block):
-            P3[i][3] = data
-            if(processor != P3):
                 writeMiss += 1
-            else:
-                writeHit += 1
-            return i, False
-    else:
-        writeMiss += 1
 
 def read_inst(mem_block, processor):
     global readMiss
@@ -246,8 +228,7 @@ def firstProcessorL1():
     else:
         print("Calculating...")
 
-
-def secondCacheL1():
+def secondProcessorL1():
     inst = generate_inst(P1)
     instArr = inst.split(" ")
     if(instArr[1] == "READ"):
@@ -265,7 +246,7 @@ def secondCacheL1():
     else:
         print("Calculating...")
 
-def thirdCacheL1():
+def thirdProcessorL1():
     inst = generate_inst(P2)
     instArr = inst.split(" ")
     if(instArr[1] == "READ"):
@@ -283,7 +264,7 @@ def thirdCacheL1():
     else:
         print("Calculating...")
 
-def fourthCacheL1():
+def fourthProcessorL1():
     inst = generate_inst(P3)
     instArr = inst.split(" ")
     if(instArr[1] == "READ"):
@@ -335,7 +316,5 @@ if __name__ == '__main__':
     print("Caché 4:")
     print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
       for row in P3]))
-    # proce = firstProcessorL1()
-    # print(proce)
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
