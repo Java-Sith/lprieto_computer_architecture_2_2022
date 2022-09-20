@@ -1,3 +1,4 @@
+from multiprocessing import process
 from tkinter import *
 import time
 from random import randint
@@ -8,12 +9,11 @@ from random import *
 # root.title("Threading Example!")
 # root.geometry("500x400")
 
-P0 = [["B1", "I", "0x000", 0], ["B2", "I", "0x000", 0], ["B3", "I", "0x010", 0], ["B4", "I", "0x011", 0]]
-P1 = [["B1", "I", "0x110", 0], ["B2", "I", "0x010", 0], ["B3", "I", "0x110", 0], ["B4", "I", "0x010", 0]]
-P2 = [["B1", "I", "0x101", 0], ["B2", "I", "0x011", 0], ["B3", "I", "0x111", 0], ["B4", "I", "0x100", 0]]
-P3 = [["B1", "I", "0x011", 0], ["B2", "I", "0x111", 0], ["B3", "I", "0x011", 0], ["B4", "I", "0x101", 0]]
-Memory = {"0x000": 0, "0x001": 0, "0x010": 0, "0x011": 0, "0x100": 0, "0x101": 0, "0x110": 0, "0x111": 0}
-Instructions = {0: "READ 100", 1: "CALC", 2: "WRITE 010 100", 3: "READ 011", 4: "WRITE 101 20", }
+P0 = [["B1", "I", "0000", "0000"], ["B2", "I", "0000", "0000"], ["B3", "I", "0000", "0000"], ["B4", "I", "0000", "0000"]]
+P1 = [["B1", "I", "0000", "0000"], ["B2", "I", "0000", "0000"], ["B3", "I", "0000", "0000"], ["B4", "I", "0000", "0000"]]
+P2 = [["B1", "I", "0000", "0000"], ["B2", "I", "0000", "0000"], ["B3", "I", "0000", "0000"], ["B4", "I", "0000", "0000"]]
+P3 = [["B1", "I", "0000", "0000"], ["B2", "I", "0000", "0000"], ["B3", "I", "0000", "0000"], ["B4", "I", "0000", "0000"]]
+Memory = {"0000": 0, "0001": 0, "0010": 0, "0011": 0, "0100": 0, "0101": 0, "0110": 0, "0111": 0}
 readMiss = 0
 writeMiss = 0
 readHit = 0
@@ -27,7 +27,6 @@ writeHit = 0
 # my_label.pack(pady=20)
 
 # my_button1 = Button(root, text="5 Seconds", command=Thread(target=five_seconds()).start())
-# # my_button1 = Button(root, text="5 Seconds", command=five_seconds)
 # my_button1.pack(pady=20)
 
 # random_label = Label(root, text="Random number")
@@ -61,10 +60,13 @@ def write_back(mem_block, data):
     else:
         print("This didn't work")
 
-def state_change(current_state, action, processor, row):
+def state_change(current_state, action, processor, row, inMemory):
     if(current_state == "I"):
         if(action == "Read"):
-            processor[row][1] = "S"
+            if(inMemory):
+                processor[row][1] = "E"
+            else:
+                processor[row][1] = "S"
         elif(action == "Write"):
             processor[row][1] = "M"
     elif(current_state == "S"):
@@ -90,25 +92,25 @@ def state_change(current_state, action, processor, row):
 def read_memory(mem_block, processor, row):
     for key in Memory:
         if (key == mem_block):
-            if(key == "0x000" or key == "0x100"):
+            if(key == "0000" or key == "0100"):
                 processor[0][2] = key
                 processor[0][3] = Memory[key]
-                return 0 
-            elif(key == "0x001" or key == "0x101"):
+                return 0, True
+            elif(key == "0001" or key == "0101"):
                 processor[1][2] = key
                 processor[1][3] = Memory[key]
-                return 1 
-            elif(key == "0x010" or key == "0x110"):
+                return 1, True
+            elif(key == "0010" or key == "0110"):
                 processor[2][2] = key
                 processor[2][3] = Memory[key]
-                return 2 
-            elif(key == "0x011" or key == "0x111"):
+                return 2, True
+            elif(key == "0011" or key == "0111"):
                 processor[3][2] = key
                 processor[3][3] = Memory[key]
-                return 3 
+                return 3, True
             else:
                 print("Key not found!")
-            break
+                break
         else:
             print("Key not compatible!")
 
@@ -122,7 +124,7 @@ def write_inst(mem_block, processor, data):
                 writeMiss += 1
             else:
                 writeHit += 1
-            return i
+            return i, False
     for i in range(4):
         if (P1[i][2] == mem_block):
             P1[i][3] = data
@@ -130,7 +132,7 @@ def write_inst(mem_block, processor, data):
                 writeMiss += 1
             else:
                 writeHit += 1
-            return i
+            return i, False
     for i in range(4):
         if (P2[i][2] == mem_block):
             P2[i][3] = data
@@ -138,7 +140,7 @@ def write_inst(mem_block, processor, data):
                 writeMiss += 1
             else:
                 writeHit += 1
-            return i
+            return i, False
     for i in range(4):
         if (P3[i][2] == mem_block):
             P3[i][3] = data
@@ -146,14 +148,13 @@ def write_inst(mem_block, processor, data):
                 writeMiss += 1
             else:
                 writeHit += 1
-            return i
+            return i, False
     else:
         writeMiss += 1
 
 def read_inst(mem_block, processor):
     global readMiss
     global readHit
-    row = 0
     for i in range(4):
         if (P0[i][2] == mem_block and P0[i][1] == "E"):
             processor[i][3] = P0[i][3]
@@ -161,7 +162,7 @@ def read_inst(mem_block, processor):
                 readMiss += 1
             else:
                 readHit += 1
-            return i
+            return i, False
     for i in range(4):
         if (P1[i][2] == mem_block and P1[i][1] == "E"):
             processor[i][3] = P1[i][3]
@@ -169,7 +170,7 @@ def read_inst(mem_block, processor):
                 readMiss += 1
             else:
                 readHit += 1
-            return i
+            return i, False
     for i in range(4):
         if (P2[i][2] == mem_block and P2[i][1] == "E"):
             processor[i][3] = P2[i][3]
@@ -177,7 +178,7 @@ def read_inst(mem_block, processor):
                 readMiss += 1
             else:
                 readHit += 1
-            return i
+            return i, False
     for i in range(4):    
         if (P3[i][2] == mem_block and P3[i][1] == "E"):
             processor[i][3] = P3[i][3]
@@ -186,74 +187,156 @@ def read_inst(mem_block, processor):
                 readMiss += 1
             else:
                 readHit += 1
-            return i
+            return i, False
     else:
         readMiss += 1
-        read_memory(mem_block, processor, i)
+        row, inMemory = read_memory(mem_block, processor, i)
+        return row, inMemory
 
-def generate_inst():
-    n = randint(1, 10)
+def generate_inst(processor):
+    n = randint(1, 20)
     k = randint(1, 10)
     p = randint(0, 5) / randint(5, 10)
     dist = binomial_dist(n, k, p)
-    inst = "P" + str(randint(0, 3)) + " " + Instructions[dist]
+    if(processor == P0):
+        if(dist == 0):
+            inst = "P0" + " " + "READ" + " " + format(randint(0, 7), "04b")
+        elif(dist == 1):
+            inst = "P0" + " " + "WRITE" + " " + format(randint(0, 7), "04b") + " " + format(randint(0, 65535), "04X")
+        else:
+            inst = "CALC"
+    elif(processor == P1):
+        if(dist == 0):
+            inst = "P1" + " " + "READ" + " " + format(randint(0, 7), "04b")
+        elif(dist == 1):
+            inst = "P1" + " " + "WRITE" + " " + format(randint(0, 7), "04b") + " " + format(randint(0, 65535), "04X")
+        else:
+            inst = "CALC"
+    elif(processor == P2):
+        if(dist == 0):
+            inst = "P2" + " " + "READ" + " " + format(randint(0, 7), "04b")
+        elif(dist == 1):
+            inst = "P2" + " " + "WRITE" + " " + format(randint(0, 7), "04b") + " " + format(randint(0, 65535), "04X")
+        else:
+            inst = "CALC"
+    elif(processor == P3):
+        if(dist == 0):
+            inst = "P3" + " " + "READ" + " " + format(randint(0, 7), "04b")
+        elif(dist == 1):
+            inst = "P3" + " " + "WRITE" + " " + format(randint(0, 7), "04b") + " " + format(randint(0, 65535), "04X")
+        else:
+            inst = "CALC"
     return inst
 
 def firstProcessorL1():
-    inst = generate_inst()
+    inst = generate_inst(P0)
     instArr = inst.split(" ")
-    if(instArr[0] == "P0"):
-        if(instArr[1] == "READ"):
-            row = read_inst("0x" + instArr[2], P0)
-            state_change(P0[row][1], "Read", P0, row)
-            state_change(P1[row][1], "ReadCache", P1, row)
-            state_change(P2[row][1], "ReadCache", P2, row)
-            state_change(P3[row][1], "ReadCache", P3, row)
-        elif(instArr[1] == "WRITE"):
-            row = write_inst("0x" + instArr[2], P0, int(instArr[3]))
-            state_change(P0[row][1], "Write", P0, row)
-            state_change(P1[row][1], "WriteCache", P1, row)
-            state_change(P2[row][1], "WriteCache", P2, row)
-            state_change(P3[row][1], "WriteCache", P3, row)
-        else:
-            print("Calculating...")
+    if(instArr[1] == "READ"):
+        row, inMemory = read_inst(instArr[2], P0)
+        state_change(P0[row][1], "Read", P0, row, inMemory)
+        state_change(P1[row][1], "ReadCache", P1, row, inMemory)
+        state_change(P2[row][1], "ReadCache", P2, row, inMemory)
+        state_change(P3[row][1], "ReadCache", P3, row, inMemory)
+    elif(instArr[1] == "WRITE"):
+        row = write_inst(instArr[2], P0, instArr[3])
+        state_change(P0[row][1], "Write", P0, row, inMemory)
+        state_change(P1[row][1], "WriteCache", P1, row, inMemory)
+        state_change(P2[row][1], "WriteCache", P2, row, inMemory)
+        state_change(P3[row][1], "WriteCache", P3, row, inMemory)
     else:
-        print("None happened")
+        print("Calculating...")
 
+
+def secondCacheL1():
+    inst = generate_inst(P1)
+    instArr = inst.split(" ")
+    if(instArr[1] == "READ"):
+        row, inMemory = read_inst(instArr[2], P1)
+        state_change(P0[row][1], "ReadCache", P0, row, inMemory)
+        state_change(P1[row][1], "Read", P1, row, inMemory)
+        state_change(P2[row][1], "ReadCache", P2, row, inMemory)
+        state_change(P3[row][1], "ReadCache", P3, row, inMemory)
+    elif(instArr[1] == "WRITE"):
+        row, inMemory = write_inst(instArr[2], P1, instArr[3])
+        state_change(P0[row][1], "WriteCache", P0, row, inMemory)
+        state_change(P1[row][1], "Write", P1, row, inMemory)
+        state_change(P2[row][1], "WriteCache", P2, row, inMemory)
+        state_change(P3[row][1], "WriteCache", P3, row, inMemory)
+    else:
+        print("Calculating...")
+
+def thirdCacheL1():
+    inst = generate_inst(P2)
+    instArr = inst.split(" ")
+    if(instArr[1] == "READ"):
+        row, inMemory = read_inst(instArr[2], P2)
+        state_change(P0[row][1], "ReadCache", P0, row, inMemory)
+        state_change(P1[row][1], "ReadCache", P1, row, inMemory)
+        state_change(P2[row][1], "Read", P2, row, inMemory)
+        state_change(P3[row][1], "ReadCache", P3, row, inMemory)
+    elif(instArr[1] == "WRITE"):
+        row, inMemory = write_inst(instArr[2], P2, instArr[3])
+        state_change(P0[row][1], "WriteCache", P0, row, inMemory)
+        state_change(P1[row][1], "WriteCache", P1, row, inMemory)
+        state_change(P2[row][1], "Write", P2, row, inMemory)
+        state_change(P3[row][1], "WriteCache", P3, row, inMemory)
+    else:
+        print("Calculating...")
+
+def fourthCacheL1():
+    inst = generate_inst(P3)
+    instArr = inst.split(" ")
+    if(instArr[1] == "READ"):
+        row = read_inst(instArr[2], P3)
+        state_change(P0[row][1], "ReadCache", P0, row)
+        state_change(P1[row][1], "ReadCache", P1, row)
+        state_change(P2[row][1], "ReadCache", P2, row)
+        state_change(P3[row][1], "Read", P3, row)
+    elif(instArr[1] == "WRITE"):
+        row = write_inst(instArr[2], P3, instArr[3])
+        state_change(P0[row][1], "WriteCache", P0, row)
+        state_change(P1[row][1], "WriteCache", P1, row)
+        state_change(P2[row][1], "WriteCache", P2, row)
+        state_change(P3[row][1], "Write", P3, row)
+    else:
+        print("Calculating...")
+
+def Controlador():
+    
 
 if __name__ == '__main__':
     print("Caché 1:")
-    print('\n'.join([''.join(['{:4}'.format(item) for item in row]) 
+    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
       for row in P0]))
     print('\n')
     print("Caché 2:")
-    print('\n'.join([''.join(['{:4}'.format(item) for item in row]) 
+    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
       for row in P1]))
     print('\n')
     print("Caché 3:")
-    print('\n'.join([''.join(['{:4}'.format(item) for item in row]) 
+    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
       for row in P2]))
     print('\n')
     print("Caché 4:")
-    print('\n'.join([''.join(['{:4}'.format(item) for item in row]) 
+    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
       for row in P3]))
     print('\n')
     firstProcessorL1()
     print('\n')
     print("Caché 1:")
-    print('\n'.join([''.join(['{:4}'.format(item) for item in row]) 
+    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
       for row in P0]))
     print('\n')
     print("Caché 2:")
-    print('\n'.join([''.join(['{:4}'.format(item) for item in row]) 
+    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
       for row in P1]))
     print('\n')
     print("Caché 3:")
-    print('\n'.join([''.join(['{:4}'.format(item) for item in row]) 
+    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
       for row in P2]))
     print('\n')
     print("Caché 4:")
-    print('\n'.join([''.join(['{:4}'.format(item) for item in row]) 
+    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
       for row in P3]))
     # proce = firstProcessorL1()
     # print(proce)
