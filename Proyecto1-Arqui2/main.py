@@ -1,6 +1,6 @@
 from multiprocessing import process
 from tkinter import *
-import time
+from time import *
 from random import randint
 from threading import *
 from random import *
@@ -13,7 +13,7 @@ P0 = [["B1", "I", "0000", "0000"], ["B2", "I", "0000", "0000"], ["B3", "I", "000
 P1 = [["B1", "I", "0000", "0000"], ["B2", "I", "0000", "0000"], ["B3", "I", "0000", "0000"], ["B4", "I", "0000", "0000"]]
 P2 = [["B1", "I", "0000", "0000"], ["B2", "I", "0000", "0000"], ["B3", "I", "0000", "0000"], ["B4", "I", "0000", "0000"]]
 P3 = [["B1", "I", "0000", "0000"], ["B2", "I", "0000", "0000"], ["B3", "I", "0000", "0000"], ["B4", "I", "0000", "0000"]]
-Memory = {"0000": 0, "0001": 0, "0010": 0, "0011": 0, "0100": 0, "0101": 0, "0110": 0, "0111": 0}
+Memory = {"0000": "0000", "0001": "0000", "0010": "0000", "0011": "0000", "0100": "0000", "0101": "0000", "0110": "0000", "0111": "0000"}
 readMiss = 0
 writeMiss = 0
 readHit = 0
@@ -118,39 +118,21 @@ def write_inst(mem_block, processor, data):
     global writeMiss
     global writeHit
     for i in range(4):
-        if (P0[i][2] == mem_block):
-            P0[i][3] = data
-            if(processor != P0):
-                writeMiss += 1
-            else:
-                writeHit += 1
+        if(processor[i][2] == mem_block):
+            processor[i][3] = data
+            writeHit += 1
             return i, False
-    for i in range(4):
-        if (P1[i][2] == mem_block):
-            P1[i][3] = data
-            if(processor != P1):
+        else:
+            if(processor[i][2] == "I"):
+                processor[i][3] = data
                 writeMiss += 1
-            else:
-                writeHit += 1
-            return i, False
-    for i in range(4):
-        if (P2[i][2] == mem_block):
-            P2[i][3] = data
-            if(processor != P2):
+                return i, False
+            elif(processor[i][2] == "S" or processor[i][2] == "M"):
+                processor[i][3] = data
                 writeMiss += 1
+                return i, False
             else:
-                writeHit += 1
-            return i, False
-    for i in range(4):
-        if (P3[i][2] == mem_block):
-            P3[i][3] = data
-            if(processor != P3):
                 writeMiss += 1
-            else:
-                writeHit += 1
-            return i, False
-    else:
-        writeMiss += 1
 
 def read_inst(mem_block, processor):
     global readMiss
@@ -200,32 +182,33 @@ def generate_inst(processor):
     dist = binomial_dist(n, k, p)
     if(processor == P0):
         if(dist == 0):
-            inst = "P0" + " " + "READ" + " " + format(randint(0, 7), "04b")
+            inst = "P0 " + "READ" + " " + format(randint(0, 7), "04b")
         elif(dist == 1):
-            inst = "P0" + " " + "WRITE" + " " + format(randint(0, 7), "04b") + " " + format(randint(0, 65535), "04X")
+            inst = "P0 " + "WRITE" + " " + format(randint(0, 7), "04b") + " " + format(randint(0, 65535), "04X")
         else:
-            inst = "CALC"
+            inst = "P0 " + "CALC"
     elif(processor == P1):
         if(dist == 0):
-            inst = "P1" + " " + "READ" + " " + format(randint(0, 7), "04b")
+            inst = "P1 " + "READ" + " " + format(randint(0, 7), "04b")
         elif(dist == 1):
-            inst = "P1" + " " + "WRITE" + " " + format(randint(0, 7), "04b") + " " + format(randint(0, 65535), "04X")
+            inst = "P1 " + "WRITE" + " " + format(randint(0, 7), "04b") + " " + format(randint(0, 65535), "04X")
         else:
-            inst = "CALC"
+            inst = "P1 " + "CALC"
     elif(processor == P2):
         if(dist == 0):
-            inst = "P2" + " " + "READ" + " " + format(randint(0, 7), "04b")
+            inst = "P2 " + "READ" + " " + format(randint(0, 7), "04b")
         elif(dist == 1):
-            inst = "P2" + " " + "WRITE" + " " + format(randint(0, 7), "04b") + " " + format(randint(0, 65535), "04X")
+            inst = "P2 " + "WRITE" + " " + format(randint(0, 7), "04b") + " " + format(randint(0, 65535), "04X")
         else:
-            inst = "CALC"
+            inst = "P2 "+ "CALC"
     elif(processor == P3):
         if(dist == 0):
-            inst = "P3" + " " + "READ" + " " + format(randint(0, 7), "04b")
+            inst = "P3 " + "READ" + " " + format(randint(0, 7), "04b")
         elif(dist == 1):
-            inst = "P3" + " " + "WRITE" + " " + format(randint(0, 7), "04b") + " " + format(randint(0, 65535), "04X")
+            inst = "P3 " + "WRITE" + " " + format(randint(0, 7), "04b") + " " + format(randint(0, 65535), "04X")
         else:
-            inst = "CALC"
+            inst = "P3 " + "CALC"
+    print(inst)
     return inst
 
 def firstProcessorL1():
@@ -238,16 +221,20 @@ def firstProcessorL1():
         state_change(P2[row][1], "ReadCache", P2, row, inMemory)
         state_change(P3[row][1], "ReadCache", P3, row, inMemory)
     elif(instArr[1] == "WRITE"):
-        row = write_inst(instArr[2], P0, instArr[3])
+        row, inMemory = write_inst(instArr[2], P0, instArr[3])
         state_change(P0[row][1], "Write", P0, row, inMemory)
         state_change(P1[row][1], "WriteCache", P1, row, inMemory)
         state_change(P2[row][1], "WriteCache", P2, row, inMemory)
         state_change(P3[row][1], "WriteCache", P3, row, inMemory)
     else:
         print("Calculating...")
+        sleep(1)
+    print("Caché 1:")
+    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
+      for row in P0]))
+    print('\n')
 
-
-def secondCacheL1():
+def secondProcessorL1():
     inst = generate_inst(P1)
     instArr = inst.split(" ")
     if(instArr[1] == "READ"):
@@ -264,8 +251,13 @@ def secondCacheL1():
         state_change(P3[row][1], "WriteCache", P3, row, inMemory)
     else:
         print("Calculating...")
+        sleep(1)
+    print("Caché 2:")
+    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
+        for row in P1]))
+    print('\n')
 
-def thirdCacheL1():
+def thirdProcessorL1():
     inst = generate_inst(P2)
     instArr = inst.split(" ")
     if(instArr[1] == "READ"):
@@ -282,60 +274,125 @@ def thirdCacheL1():
         state_change(P3[row][1], "WriteCache", P3, row, inMemory)
     else:
         print("Calculating...")
+        sleep(1)
+    print("Caché 3:")
+    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
+        for row in P2]))
+    print('\n')
 
-def fourthCacheL1():
+def fourthProcessorL1():
     inst = generate_inst(P3)
     instArr = inst.split(" ")
     if(instArr[1] == "READ"):
-        row = read_inst(instArr[2], P3)
-        state_change(P0[row][1], "ReadCache", P0, row)
-        state_change(P1[row][1], "ReadCache", P1, row)
-        state_change(P2[row][1], "ReadCache", P2, row)
-        state_change(P3[row][1], "Read", P3, row)
+        row, inMemory = read_inst(instArr[2], P3)
+        state_change(P0[row][1], "ReadCache", P0, row, inMemory)
+        state_change(P1[row][1], "ReadCache", P1, row, inMemory)
+        state_change(P2[row][1], "ReadCache", P2, row, inMemory)
+        state_change(P3[row][1], "Read", P3, row, inMemory)
     elif(instArr[1] == "WRITE"):
-        row = write_inst(instArr[2], P3, instArr[3])
-        state_change(P0[row][1], "WriteCache", P0, row)
-        state_change(P1[row][1], "WriteCache", P1, row)
-        state_change(P2[row][1], "WriteCache", P2, row)
-        state_change(P3[row][1], "Write", P3, row)
+        row, inMemory = write_inst(instArr[2], P3, instArr[3])
+        state_change(P0[row][1], "WriteCache", P0, row, inMemory)
+        state_change(P1[row][1], "WriteCache", P1, row, inMemory)
+        state_change(P2[row][1], "WriteCache", P2, row, inMemory)
+        state_change(P3[row][1], "Write", P3, row, inMemory)
     else:
         print("Calculating...")
+        sleep(1)
+    print("Caché 4:")
+    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
+        for row in P3]))
+    print('\n')
+
+def Controlador():
+    print("Se inicia el proceso con: ")
+    sleep(2)
+    print("Caché 1:")
+    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
+        for row in P0]))
+    print('\n')
+    print("Caché 2:")
+    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
+        for row in P1]))
+    print('\n')
+    print("Caché 3:")
+    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
+        for row in P2]))
+    print('\n')
+    print("Caché 4:")
+    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
+        for row in P3]))
+    print('\n')
+    print("Memoria:")
+    print(Memory)
+    print('\n')
+    try:
+        t1 = Thread(target=firstProcessorL1, args=[])
+        t1.start()
+        t2 = Thread(target=secondProcessorL1, args=[])
+        t2.start()
+        t3 = Thread(target=thirdProcessorL1, args=[])
+        t3.start()
+        t4 = Thread(target=fourthProcessorL1, args=[])
+        t4.start()
+        sleep(10)
+        print("Se finaliza el proceso con: ")
+        sleep(1)
+        print("Caché 1:")
+        print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
+            for row in P0]))
+        print('\n')
+        print("Caché 2:")
+        print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
+            for row in P1]))
+        print('\n')
+        print("Caché 3:")
+        print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
+            for row in P2]))
+        print('\n')
+        print("Caché 4:")
+        print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
+            for row in P3]))
+        print('\n')
+        print("Memoria:")
+        print(Memory)
+        print('\n')
+    except:
+        print("Error fatal en los threads!")
 
 if __name__ == '__main__':
-    print("Caché 1:")
-    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
-      for row in P0]))
-    print('\n')
-    print("Caché 2:")
-    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
-      for row in P1]))
-    print('\n')
-    print("Caché 3:")
-    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
-      for row in P2]))
-    print('\n')
-    print("Caché 4:")
-    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
-      for row in P3]))
-    print('\n')
-    firstProcessorL1()
-    print('\n')
-    print("Caché 1:")
-    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
-      for row in P0]))
-    print('\n')
-    print("Caché 2:")
-    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
-      for row in P1]))
-    print('\n')
-    print("Caché 3:")
-    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
-      for row in P2]))
-    print('\n')
-    print("Caché 4:")
-    print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
-      for row in P3]))
-    # proce = firstProcessorL1()
-    # print(proce)
+    # print("Caché 1:")
+    # print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
+    #   for row in P0]))
+    # print('\n')
+    # print("Caché 2:")
+    # print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
+    #   for row in P1]))
+    # print('\n')
+    # print("Caché 3:")
+    # print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
+    #   for row in P2]))
+    # print('\n')
+    # print("Caché 4:")
+    # print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
+    #   for row in P3]))
+    # print('\n')
+    # firstProcessorL1()
+    # print('\n')
+    # print("Caché 1:")
+    # print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
+    #   for row in P0]))
+    # print('\n')
+    # print("Caché 2:")
+    # print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
+    #   for row in P1]))
+    # print('\n')
+    # print("Caché 3:")
+    # print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
+    #   for row in P2]))
+    # print('\n')
+    # print("Caché 4:")
+    # print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
+    #   for row in P3]))
+    Controlador()
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
