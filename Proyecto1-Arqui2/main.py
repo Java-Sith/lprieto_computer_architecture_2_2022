@@ -301,9 +301,6 @@ def fourthCacheL1():
     else:
         print("Calculating...")
 
-def Controlador():
-    
-
 if __name__ == '__main__':
     print("Caché 1:")
     print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
