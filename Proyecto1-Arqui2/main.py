@@ -1,13 +1,14 @@
 from multiprocessing import process
 from tkinter import *
+from tkinter import ttk
 from time import *
 from random import randint
 from threading import *
 from random import *
 
-# root = Tk()
-# root.title("Threading Example!")
-# root.geometry("500x400")
+root = Tk()
+root.title("MESI Cache Simulator!")
+root.geometry("900x600")
 
 P0 = [["B1", "I", "0000", "0000"], ["B2", "I", "0000", "0000"], ["B3", "I", "0000", "0000"], ["B4", "I", "0000", "0000"]]
 P1 = [["B1", "I", "0000", "0000"], ["B2", "I", "0000", "0000"], ["B3", "I", "0000", "0000"], ["B4", "I", "0000", "0000"]]
@@ -22,6 +23,66 @@ writeHit = 0
 # def five_seconds():
 #     time.sleep(5)
 #     my_label.config(text="5 Seconds Is Up!")
+
+my_tree1 = ttk.Treeview(root)
+my_tree2 = ttk.Treeview(root)
+my_tree3 = ttk.Treeview(root)
+my_tree4 = ttk.Treeview(root)
+my_tree5 = ttk.Treeview(root)
+
+my_tree1['columns'] = ("Bloque", "Estado", "Direccion", "Dato")
+my_tree2['columns'] = ("Bloque", "Estado", "Direccion", "Dato")
+my_tree3['columns'] = ("Bloque", "Estado", "Direccion", "Dato")
+my_tree4['columns'] = ("Bloque", "Estado", "Direccion", "Dato")
+my_tree5['columns'] = ("Direccion", "Dato")
+
+my_tree1.column("#0", width=100, minwidth=20)
+my_tree1.column("Estado", anchor = CENTER, width=100)
+my_tree1.column("Direccion", anchor = W, width=100)
+my_tree1.column("Dato", anchor = CENTER, width=100)
+
+my_tree2.column("#0", width=100, minwidth=20)
+my_tree2.column("Estado", anchor = CENTER, width=100)
+my_tree2.column("Direccion", anchor = W, width=100)
+my_tree2.column("Dato", anchor = CENTER, width=100)
+
+my_tree3.column("#0", width=100, minwidth=20)
+my_tree3.column("Estado", anchor = CENTER, width=100)
+my_tree3.column("Direccion", anchor = W, width=100)
+my_tree3.column("Dato", anchor = CENTER, width=100)
+
+my_tree4.column("#0", width=100, minwidth=20)
+my_tree4.column("Estado", anchor = CENTER, width=100)
+my_tree4.column("Direccion", anchor = W, width=100)
+my_tree4.column("Dato", anchor = CENTER, width=100)
+
+my_tree5.column("#0", width=100, minwidth=20)
+my_tree5.column("Direccion", anchor = W, width=100)
+my_tree5.column("Dato", anchor = CENTER, width=100)
+
+my_tree1.heading("#0", text = "Bloque", anchor = W)
+my_tree1.heading("Estado", text = "Estado", anchor = W)
+my_tree1.heading("Direccion", text = "Direccion", anchor = W)
+my_tree1.heading("Dato", text = "Dato", anchor = W)
+
+my_tree2.heading("#0", text = "Bloque", anchor = W)
+my_tree2.heading("Estado", text = "Estado", anchor = W)
+my_tree2.heading("Direccion", text = "Direccion", anchor = W)
+my_tree2.heading("Dato", text = "Dato", anchor = W)
+
+my_tree3.heading("#0", text = "Bloque", anchor = W)
+my_tree3.heading("Estado", text = "Estado", anchor = W)
+my_tree3.heading("Direccion", text = "Direccion", anchor = W)
+my_tree3.heading("Dato", text = "Dato", anchor = W)
+
+my_tree4.heading("#0", text = "Bloque", anchor = W)
+my_tree4.heading("Estado", text = "Estado", anchor = W)
+my_tree4.heading("Direccion", text = "Direccion", anchor = W)
+my_tree4.heading("Dato", text = "Dato", anchor = W)
+
+my_tree5.heading("#0", text = "", anchor = W)
+my_tree5.heading("Direccion", text = "Direccion", anchor = W)
+my_tree5.heading("Dato", text = "Dato", anchor = W)
 
 # my_label = Label(root, text="I made a thread")
 # my_label.pack(pady=20)
@@ -131,8 +192,6 @@ def write_inst(mem_block, processor, data):
                 processor[i][3] = data
                 writeMiss += 1
                 return i, False
-            else:
-                writeMiss += 1
 
 def read_inst(mem_block, processor):
     global readMiss
@@ -175,7 +234,8 @@ def read_inst(mem_block, processor):
         row, inMemory = read_memory(mem_block, processor, i)
         return row, inMemory
 
-def generate_inst(processor):
+def generate_inst(processor, lock):
+    lock.acquire()
     n = randint(1, 20)
     k = randint(1, 10)
     p = randint(0, 5) / randint(5, 10)
@@ -209,10 +269,12 @@ def generate_inst(processor):
         else:
             inst = "P3 " + "CALC"
     print(inst)
+    lock.release()
     return inst
 
 def firstProcessorL1():
-    inst = generate_inst(P0)
+    lock = Lock()
+    inst = generate_inst(P0, lock)
     instArr = inst.split(" ")
     if(instArr[1] == "READ"):
         row, inMemory = read_inst(instArr[2], P0)
@@ -235,7 +297,8 @@ def firstProcessorL1():
     print('\n')
 
 def secondProcessorL1():
-    inst = generate_inst(P1)
+    lock = Lock()
+    inst = generate_inst(P1, lock)
     instArr = inst.split(" ")
     if(instArr[1] == "READ"):
         row, inMemory = read_inst(instArr[2], P1)
@@ -258,7 +321,8 @@ def secondProcessorL1():
     print('\n')
 
 def thirdProcessorL1():
-    inst = generate_inst(P2)
+    lock = Lock()
+    inst = generate_inst(P2, lock)
     instArr = inst.split(" ")
     if(instArr[1] == "READ"):
         row, inMemory = read_inst(instArr[2], P2)
@@ -281,7 +345,8 @@ def thirdProcessorL1():
     print('\n')
 
 def fourthProcessorL1():
-    inst = generate_inst(P3)
+    lock = Lock()
+    inst = generate_inst(P3, lock)
     instArr = inst.split(" ")
     if(instArr[1] == "READ"):
         row, inMemory = read_inst(instArr[2], P3)
@@ -393,6 +458,6 @@ if __name__ == '__main__':
     # print("Caché 4:")
     # print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
     #   for row in P3]))
-    Controlador()
+    root.mainloop()
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
