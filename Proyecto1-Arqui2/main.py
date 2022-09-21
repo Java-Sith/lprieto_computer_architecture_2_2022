@@ -1,12 +1,9 @@
-from dis import Instruction
-from multiprocessing import process
 from tkinter import *
 from tkinter import ttk
 from time import *
 from random import randint
 from threading import *
 from random import *
-from turtle import left
 
 root = Tk()
 root.title("MESI Cache Simulator!")
@@ -23,16 +20,13 @@ readHit = 0
 writeHit = 0
 Instructions = []
 
-# def five_seconds():
-#     time.sleep(5)
-#     my_label.config(text="5 Seconds Is Up!")
-
 my_tree1 = ttk.Treeview(root)
 my_tree2 = ttk.Treeview(root)
 my_tree3 = ttk.Treeview(root)
 my_tree4 = ttk.Treeview(root)
 my_tree5 = ttk.Treeview(root)
 my_tree6 = ttk.Treeview(root)
+my_tree7 = ttk.Treeview(root)
 
 my_tree1['columns'] = ("Estado", "Direccion", "Dato")
 my_tree2['columns'] = ("Estado", "Direccion", "Dato")
@@ -40,6 +34,7 @@ my_tree3['columns'] = ("Estado", "Direccion", "Dato")
 my_tree4['columns'] = ("Estado", "Direccion", "Dato")
 my_tree5['columns'] = ("Dato")
 my_tree6['columns'] = ("Instruccion")
+my_tree7['columns'] = ("ReadMiss", "WriteMiss")
 
 my_tree1.column("#0", width=100, minwidth=20)
 my_tree1.column("Estado", anchor = CENTER, width=60)
@@ -67,6 +62,10 @@ my_tree5.column("Dato", anchor = CENTER, width=100)
 my_tree6.column("#0", width=100, minwidth=20)
 my_tree6.column("Instruccion", anchor = CENTER, width=300)
 
+my_tree7.column("#0", width=20, minwidth=0)
+my_tree7.column("ReadMiss", anchor = CENTER, width=100)
+my_tree7.column("WriteMiss", anchor = CENTER, width=100)
+
 my_tree1.heading("#0", text = "P0", anchor = CENTER)
 my_tree1.heading("Estado", text = "Estado", anchor = CENTER)
 my_tree1.heading("Direccion", text = "Direccion", anchor = CENTER)
@@ -92,6 +91,10 @@ my_tree5.heading("Dato", text = "Dato", anchor = CENTER)
 
 my_tree6.heading("#0", text = "Procesador", anchor = CENTER)
 my_tree6.heading("Instruccion", text = "Instruccion", anchor = CENTER)
+
+my_tree7.heading("#0", text = "()", anchor = CENTER)
+my_tree7.heading("ReadMiss", text = "ReadMiss", anchor = CENTER)
+my_tree7.heading("WriteMiss", text = "WriteMiss", anchor = CENTER)
 
 my_tree1.insert(parent='', index='end', text=P0[0][0], values=(P0[0][1], P0[0][2], P0[0][3]))
 my_tree1.insert(parent='', index='end', text=P0[1][0], values=(P0[1][1], P0[1][2], P0[1][3]))
@@ -132,7 +135,8 @@ my_tree2.place(x=410, y=10)
 my_tree3.place(x=10, y=310)
 my_tree4.place(x=410, y=310)
 my_tree5.place(x=810, y=10)
-my_tree6.place(x=810, y=410)
+my_tree6.place(x=810, y=510)
+my_tree7.place(x=810, y=260)
 
 # my_label = Label(root, text="I made a thread")
 # my_label.pack(pady=20)
@@ -174,6 +178,7 @@ def state_change(current_state, action, processor, row, inMemory):
             else:
                 processor[row][1] = "S"
         elif(action == "Write"):
+            print("Debería cambiar de estado!")
             processor[row][1] = "M"
     elif(current_state == "S"):
         if(action == "WriteCache"):
@@ -217,8 +222,6 @@ def read_memory(mem_block, processor, row):
             else:
                 print("Key not found!")
                 break
-        else:
-            print("Key not compatible!")
 
 def write_inst(mem_block, processor, data):
     global writeMiss
@@ -228,63 +231,72 @@ def write_inst(mem_block, processor, data):
             processor[i][3] = data
             writeHit += 1
             return i, False
-        else:
-            if(processor[i][1] == "I"):
-                processor[i][3] = data
-                writeMiss += 1
-                return i, False
-            elif(processor[i][1] == "S" or processor[i][1] == "M"):
-                processor[i][3] = data
-                writeMiss += 1
-                return i, False
+    else:
+        if(mem_block == "0000" or mem_block == "0100"):
+            processor[0][2] = mem_block
+            processor[0][3] = data
+            writeMiss += 1
+            return 0, False
+        elif(mem_block == "0001" or mem_block == "0101"):
+            processor[1][2] = mem_block
+            processor[1][3] = data
+            writeMiss += 1
+            return 1, False
+        elif(mem_block == "0010" or mem_block == "0110"):
+            processor[2][2] = mem_block
+            processor[2][3] = data
+            writeMiss += 1
+            return 2, False
+        elif(mem_block == "0011" or mem_block == "0111"):
+            processor[3][2] = mem_block
+            processor[3][3] = data
+            writeMiss += 1
+            return 3, False   
 
 def read_inst(mem_block, processor):
     global readMiss
     global readHit
     for i in range(4):
-        if (P0[i][2] == mem_block and P0[i][1] == "E"):
-            processor[i][3] = P0[i][3]
-            if(processor != P0):
-                readMiss += 1
-            else:
-                readHit += 1
-            return i, False
-    for i in range(4):
-        if (P1[i][2] == mem_block and P1[i][1] == "E"):
-            processor[i][3] = P1[i][3]
-            if(processor != P1):
-                readMiss += 1
-            else:
-                readHit += 1
-            return i, False
-    for i in range(4):
-        if (P2[i][2] == mem_block and P2[i][1] == "E"):
-            processor[i][3] = P2[i][3]
-            if(processor != P2):
-                readMiss += 1
-            else:
-                readHit += 1
-            return i, False
-    for i in range(4):    
-        if (P3[i][2] == mem_block and P3[i][1] == "E"):
-            processor[i][3] = P3[i][3]
-            row = i
-            if(processor != P3):
-                readMiss += 1
-            else:
-                readHit += 1
+        if(processor[i][2] == mem_block and processor[i][1] != "I"):
+            readHit += 1
             return i, False
     else:
-        readMiss += 1
-        row, inMemory = read_memory(mem_block, processor, i)
-        return row, inMemory
+        for i in range(4):
+            if (P0[i][2] == mem_block and P0[i][1] == "E"):
+                processor[i][3] = P0[i][3]
+                processor[i][2] = P0[i][2]
+                readMiss += 1
+                return i, False
+        for i in range(4):
+            if (P1[i][2] == mem_block and P1[i][1] == "E"):
+                processor[i][3] = P1[i][3]
+                processor[i][2] = P1[i][2]
+                readMiss += 1
+                return i, False
+        for i in range(4):
+            if (P2[i][2] == mem_block and P2[i][1] == "E"):
+                processor[i][3] = P2[i][3]
+                processor[i][2] = P2[i][2]
+                readMiss += 1
+                return i, False
+        for i in range(4):    
+            if (P3[i][2] == mem_block and P3[i][1] == "E"):
+                processor[i][3] = P3[i][3]
+                processor[i][2] = P3[i][2]
+                readMiss += 1
+                return i, False
+        else:
+            readMiss += 1
+            row, inMemory = read_memory(mem_block, processor, i)
+            return row, inMemory
 
-def generate_inst(processor, lock):
+def generate_inst(proce, lock):
     lock.acquire()
-    n = randint(1, 20)
-    k = randint(1, 10)
-    p = randint(0, 5) / randint(5, 10)
+    n = randint(0, 10)
+    k = randint(0, 5)
+    p = randint(1, 5) / randint(5, 10)
     dist = binomial_dist(n, k, p)
+    processor = proce
     if(processor == P0):
         if(dist == 0):
             inst = "P0 " + "READ" + " " + format(randint(0, 7), "04b")
@@ -313,15 +325,17 @@ def generate_inst(processor, lock):
             inst = "P3 " + "WRITE" + " " + format(randint(0, 7), "04b") + " " + format(randint(0, 65535), "04X")
         else:
             inst = "P3 " + "CALC"
-    print(inst)
-    lock.release()
+    sleep(0.1)
     Instructions.append(inst)
+    lock.release()
     return inst
 
 def firstProcessorL1():
     lock = Lock()
     inst = generate_inst(P0, lock)
+    print(inst)
     instArr = inst.split(" ")
+    lock.acquire()
     if(instArr[1] == "READ"):
         row, inMemory = read_inst(instArr[2], P0)
         state_change(P0[row][1], "Read", P0, row, inMemory)
@@ -330,13 +344,15 @@ def firstProcessorL1():
         state_change(P3[row][1], "ReadCache", P3, row, inMemory)
     elif(instArr[1] == "WRITE"):
         row, inMemory = write_inst(instArr[2], P0, instArr[3])
+        print(row)
         state_change(P0[row][1], "Write", P0, row, inMemory)
         state_change(P1[row][1], "WriteCache", P1, row, inMemory)
         state_change(P2[row][1], "WriteCache", P2, row, inMemory)
         state_change(P3[row][1], "WriteCache", P3, row, inMemory)
     else:
         print("Calculating...")
-        sleep(1)
+    sleep(0.1)
+    lock.release()
     print("Caché 1:")
     print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
       for row in P0]))
@@ -345,7 +361,9 @@ def firstProcessorL1():
 def secondProcessorL1():
     lock = Lock()
     inst = generate_inst(P1, lock)
+    print(inst)
     instArr = inst.split(" ")
+    lock.acquire()
     if(instArr[1] == "READ"):
         row, inMemory = read_inst(instArr[2], P1)
         state_change(P0[row][1], "ReadCache", P0, row, inMemory)
@@ -360,7 +378,8 @@ def secondProcessorL1():
         state_change(P3[row][1], "WriteCache", P3, row, inMemory)
     else:
         print("Calculating...")
-        sleep(1)
+    sleep(0.1)
+    lock.release()
     print("Caché 2:")
     print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
         for row in P1]))
@@ -369,7 +388,9 @@ def secondProcessorL1():
 def thirdProcessorL1():
     lock = Lock()
     inst = generate_inst(P2, lock)
+    print(inst)
     instArr = inst.split(" ")
+    lock.acquire()
     if(instArr[1] == "READ"):
         row, inMemory = read_inst(instArr[2], P2)
         state_change(P0[row][1], "ReadCache", P0, row, inMemory)
@@ -384,7 +405,8 @@ def thirdProcessorL1():
         state_change(P3[row][1], "WriteCache", P3, row, inMemory)
     else:
         print("Calculating...")
-        sleep(1)
+    sleep(0.1)
+    lock.release()
     print("Caché 3:")
     print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
         for row in P2]))
@@ -393,7 +415,9 @@ def thirdProcessorL1():
 def fourthProcessorL1():
     lock = Lock()
     inst = generate_inst(P3, lock)
+    print(inst)
     instArr = inst.split(" ")
+    lock.acquire()
     if(instArr[1] == "READ"):
         row, inMemory = read_inst(instArr[2], P3)
         state_change(P0[row][1], "ReadCache", P0, row, inMemory)
@@ -408,7 +432,8 @@ def fourthProcessorL1():
         state_change(P3[row][1], "Write", P3, row, inMemory)
     else:
         print("Calculating...")
-        sleep(1)
+    sleep(0.1)
+    lock.acquire()
     print("Caché 4:")
     print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
         for row in P3]))
@@ -416,7 +441,7 @@ def fourthProcessorL1():
 
 def Controlador():
     print("Se inicia el proceso: ")
-    sleep(2)
+    sleep(1)
     print("Caché 1:")
     print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
         for row in P0]))
@@ -436,6 +461,8 @@ def Controlador():
     print("Memoria:")
     print(Memory)
     print('\n')
+    i = 0
+    sleep(2)
     try:
         t1 = Thread(target=firstProcessorL1, args=[])
         t1.start()
@@ -445,6 +472,10 @@ def Controlador():
         t3.start()
         t4 = Thread(target=fourthProcessorL1, args=[])
         t4.start()
+        # t1.join()
+        # t2.join()
+        # t3.join()
+        # t4.join()
         sleep(10)
         print("Se finaliza el proceso: ")
         sleep(1)
@@ -468,6 +499,9 @@ def Controlador():
         print(Memory)
         print('\n')
         print(Instructions)
+        print("Read Miss: ", readMiss)
+        print("Write Miss: ", writeMiss)
+
         my_tree1.item("I001", text=P0[0][0], values=(P0[0][1], P0[0][2], P0[0][3]))
         my_tree1.item("I002", text=P0[1][0], values=(P0[1][1], P0[1][2], P0[1][3]))
         my_tree1.item("I003", text=P0[2][0], values=(P0[2][1], P0[2][2], P0[2][3]))
@@ -478,15 +512,15 @@ def Controlador():
         my_tree2.item("I003", text=P1[2][0], values=(P1[2][1], P1[2][2], P1[2][3]))
         my_tree2.item("I004", text=P1[3][0], values=(P1[3][1], P1[3][2], P1[3][3]))
 
-        my_tree3.item("I001", text=P2[0][0], values=(P2[0][1], P0[0][2], P0[0][3]))
-        my_tree3.item("I002", text=P2[1][0], values=(P2[1][1], P0[1][2], P0[1][3]))
-        my_tree3.item("I003", text=P2[2][0], values=(P2[2][1], P0[2][2], P0[2][3]))
-        my_tree3.item("I004", text=P2[3][0], values=(P2[3][1], P0[3][2], P0[3][3]))
+        my_tree3.item("I001", text=P2[0][0], values=(P2[0][1], P2[0][2], P2[0][3]))
+        my_tree3.item("I002", text=P2[1][0], values=(P2[1][1], P2[1][2], P2[1][3]))
+        my_tree3.item("I003", text=P2[2][0], values=(P2[2][1], P2[2][2], P2[2][3]))
+        my_tree3.item("I004", text=P2[3][0], values=(P2[3][1], P2[3][2], P2[3][3]))
 
-        my_tree4.item("I001", text=P3[0][0], values=(P0[0][1], P0[0][2], P0[0][3]))
-        my_tree4.item("I002", text=P3[1][0], values=(P0[1][1], P0[1][2], P0[1][3]))
-        my_tree4.item("I003", text=P3[2][0], values=(P0[2][1], P0[2][2], P0[2][3]))
-        my_tree4.item("I004", text=P3[3][0], values=(P0[3][1], P0[3][2], P0[3][3]))
+        my_tree4.item("I001", text=P3[0][0], values=(P3[0][1], P3[0][2], P3[0][3]))
+        my_tree4.item("I002", text=P3[1][0], values=(P3[1][1], P3[1][2], P3[1][3]))
+        my_tree4.item("I003", text=P3[2][0], values=(P3[2][1], P3[2][2], P3[2][3]))
+        my_tree4.item("I004", text=P3[3][0], values=(P3[3][1], P3[3][2], P3[3][3]))
 
         my_tree5.item("I001", text="0000", values=Memory["0000"])
         my_tree5.item("I002", text="0001", values=Memory["0001"])
@@ -497,10 +531,14 @@ def Controlador():
         my_tree5.item("I007", text="0110", values=Memory["0110"])
         my_tree5.item("I008", text="0111", values=Memory["0111"])
 
-        my_tree6.item("I001", text="P0", values=Instructions[0])
-        my_tree6.item("I002", text="P1", values=Instructions[1])
-        my_tree6.item("I003", text="P2", values=Instructions[2])
-        my_tree6.item("I004", text="P3", values=Instructions[3])
+        my_tree6.item("I001", text="P0", values=Instructions[i])
+        my_tree6.item("I002", text="P1", values=Instructions[i + 1])
+        my_tree6.item("I003", text="P2", values=Instructions[i + 2])
+        my_tree6.item("I004", text="P3", values=Instructions[i + 3])
+
+        i += 4
+
+        my_tree7.insert(parent='', index='end', text="", values=(readMiss, writeMiss))
 
         root.update()
     except:
@@ -512,15 +550,13 @@ def cicloControlador():
         Controlador()
         ciclos -= 1
 
-my_button1 = Button(root, text="Start!", command=Controlador)
-my_button1.place(x=810, y=310)
+my_button1 = Button(root, text="Paso a paso", command=Controlador)
+my_button1.place(x=450, y=240)
 
-my_button2 = Button(root, text="Go!", command=cicloControlador)
-my_button2.place(x=810, y=360)
+my_button2 = Button(root, text="Ejecutar", command=cicloControlador)
+my_button2.place(x=450, y=270)
 
 if __name__ == '__main__':
-    # for child in my_tree5.get_children():
-    #     print(child)
     root.mainloop()
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
