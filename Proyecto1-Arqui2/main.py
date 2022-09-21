@@ -1,13 +1,16 @@
+from dis import Instruction
 from multiprocessing import process
 from tkinter import *
+from tkinter import ttk
 from time import *
 from random import randint
 from threading import *
 from random import *
+from turtle import left
 
-# root = Tk()
-# root.title("Threading Example!")
-# root.geometry("500x400")
+root = Tk()
+root.title("MESI Cache Simulator!")
+root.geometry("900x600")
 
 P0 = [["B1", "I", "0000", "0000"], ["B2", "I", "0000", "0000"], ["B3", "I", "0000", "0000"], ["B4", "I", "0000", "0000"]]
 P1 = [["B1", "I", "0000", "0000"], ["B2", "I", "0000", "0000"], ["B3", "I", "0000", "0000"], ["B4", "I", "0000", "0000"]]
@@ -18,16 +21,121 @@ readMiss = 0
 writeMiss = 0
 readHit = 0
 writeHit = 0
+Instructions = []
 
 # def five_seconds():
 #     time.sleep(5)
 #     my_label.config(text="5 Seconds Is Up!")
 
+my_tree1 = ttk.Treeview(root)
+my_tree2 = ttk.Treeview(root)
+my_tree3 = ttk.Treeview(root)
+my_tree4 = ttk.Treeview(root)
+my_tree5 = ttk.Treeview(root)
+my_tree6 = ttk.Treeview(root)
+
+my_tree1['columns'] = ("Estado", "Direccion", "Dato")
+my_tree2['columns'] = ("Estado", "Direccion", "Dato")
+my_tree3['columns'] = ("Estado", "Direccion", "Dato")
+my_tree4['columns'] = ("Estado", "Direccion", "Dato")
+my_tree5['columns'] = ("Dato")
+my_tree6['columns'] = ("Instruccion")
+
+my_tree1.column("#0", width=100, minwidth=20)
+my_tree1.column("Estado", anchor = CENTER, width=60)
+my_tree1.column("Direccion", anchor = CENTER, width=100)
+my_tree1.column("Dato", anchor = CENTER, width=100)
+
+my_tree2.column("#0", width=100, minwidth=20)
+my_tree2.column("Estado", anchor = CENTER, width=60)
+my_tree2.column("Direccion", anchor = CENTER, width=100)
+my_tree2.column("Dato", anchor = CENTER, width=100)
+
+my_tree3.column("#0", width=100, minwidth=20)
+my_tree3.column("Estado", anchor = CENTER, width=60)
+my_tree3.column("Direccion", anchor = CENTER, width=100)
+my_tree3.column("Dato", anchor = CENTER, width=100)
+
+my_tree4.column("#0", width=100, minwidth=20)
+my_tree4.column("Estado", anchor = CENTER, width=60)
+my_tree4.column("Direccion", anchor = CENTER, width=100)
+my_tree4.column("Dato", anchor = CENTER, width=100)
+
+my_tree5.column("#0", width=100, minwidth=20)
+my_tree5.column("Dato", anchor = CENTER, width=100)
+
+my_tree6.column("#0", width=100, minwidth=20)
+my_tree6.column("Instruccion", anchor = CENTER, width=300)
+
+my_tree1.heading("#0", text = "P0", anchor = CENTER)
+my_tree1.heading("Estado", text = "Estado", anchor = CENTER)
+my_tree1.heading("Direccion", text = "Direccion", anchor = CENTER)
+my_tree1.heading("Dato", text = "Dato", anchor = CENTER)
+
+my_tree2.heading("#0", text = "P1", anchor = CENTER)
+my_tree2.heading("Estado", text = "Estado", anchor = CENTER)
+my_tree2.heading("Direccion", text = "Direccion", anchor = CENTER)
+my_tree2.heading("Dato", text = "Dato", anchor = CENTER)
+
+my_tree3.heading("#0", text = "P2", anchor = CENTER)
+my_tree3.heading("Estado", text = "Estado", anchor = CENTER)
+my_tree3.heading("Direccion", text = "Direccion", anchor = CENTER)
+my_tree3.heading("Dato", text = "Dato", anchor = CENTER)
+
+my_tree4.heading("#0", text = "P3", anchor = CENTER)
+my_tree4.heading("Estado", text = "Estado", anchor = CENTER)
+my_tree4.heading("Direccion", text = "Direccion", anchor = CENTER)
+my_tree4.heading("Dato", text = "Dato", anchor = CENTER)
+
+my_tree5.heading("#0", text = "Memoria", anchor = CENTER)
+my_tree5.heading("Dato", text = "Dato", anchor = CENTER)
+
+my_tree6.heading("#0", text = "Procesador", anchor = CENTER)
+my_tree6.heading("Instruccion", text = "Instruccion", anchor = CENTER)
+
+my_tree1.insert(parent='', index='end', text=P0[0][0], values=(P0[0][1], P0[0][2], P0[0][3]))
+my_tree1.insert(parent='', index='end', text=P0[1][0], values=(P0[1][1], P0[1][2], P0[1][3]))
+my_tree1.insert(parent='', index='end', text=P0[2][0], values=(P0[2][1], P0[2][2], P0[2][3]))
+my_tree1.insert(parent='', index='end', text=P0[3][0], values=(P0[3][1], P0[3][2], P0[3][3]))
+
+my_tree2.insert(parent='', index='end', text=P1[0][0], values=(P1[0][1], P1[0][2], P1[0][3]))
+my_tree2.insert(parent='', index='end', text=P1[1][0], values=(P1[1][1], P1[1][2], P1[1][3]))
+my_tree2.insert(parent='', index='end', text=P1[2][0], values=(P1[2][1], P1[2][2], P1[2][3]))
+my_tree2.insert(parent='', index='end', text=P1[3][0], values=(P1[3][1], P1[3][2], P1[3][3]))
+
+my_tree3.insert(parent='', index='end', text=P2[0][0], values=(P2[0][1], P0[0][2], P0[0][3]))
+my_tree3.insert(parent='', index='end', text=P2[1][0], values=(P2[1][1], P0[1][2], P0[1][3]))
+my_tree3.insert(parent='', index='end', text=P2[2][0], values=(P2[2][1], P0[2][2], P0[2][3]))
+my_tree3.insert(parent='', index='end', text=P2[3][0], values=(P2[3][1], P0[3][2], P0[3][3]))
+
+my_tree4.insert(parent='', index='end', text=P3[0][0], values=(P0[0][1], P0[0][2], P0[0][3]))
+my_tree4.insert(parent='', index='end', text=P3[1][0], values=(P0[1][1], P0[1][2], P0[1][3]))
+my_tree4.insert(parent='', index='end', text=P3[2][0], values=(P0[2][1], P0[2][2], P0[2][3]))
+my_tree4.insert(parent='', index='end', text=P3[3][0], values=(P0[3][1], P0[3][2], P0[3][3]))
+
+my_tree5.insert(parent='', index='end', text="0000", values=Memory["0000"])
+my_tree5.insert(parent='', index='end', text="0001", values=Memory["0001"])
+my_tree5.insert(parent='', index='end', text="0010", values=Memory["0010"])
+my_tree5.insert(parent='', index='end', text="0011", values=Memory["0011"])
+my_tree5.insert(parent='', index='end', text="0100", values=Memory["0100"])
+my_tree5.insert(parent='', index='end', text="0101", values=Memory["0101"])
+my_tree5.insert(parent='', index='end', text="0110", values=Memory["0110"])
+my_tree5.insert(parent='', index='end', text="0111", values=Memory["0111"])
+
+my_tree6.insert(parent='', index='end', text="P0", values="None")
+my_tree6.insert(parent='', index='end', text="P1", values="None")
+my_tree6.insert(parent='', index='end', text="P2", values="None")
+my_tree6.insert(parent='', index='end', text="P3", values="None")
+
+my_tree1.place(x=10, y=10)
+my_tree2.place(x=410, y=10)
+my_tree3.place(x=10, y=310)
+my_tree4.place(x=410, y=310)
+my_tree5.place(x=810, y=10)
+my_tree6.place(x=810, y=410)
+
 # my_label = Label(root, text="I made a thread")
 # my_label.pack(pady=20)
-
-# my_button1 = Button(root, text="5 Seconds", command=Thread(target=five_seconds()).start())
-# my_button1.pack(pady=20)
 
 # random_label = Label(root, text="Random number")
 # random_label.pack(pady=20)
@@ -35,8 +143,6 @@ writeHit = 0
 # def rando():
 #     random_label.config(text=f'Random number is: {randint(1, 100)}')
 
-# my_button2 = Button(root, text="Pick Random Number", command=rando)
-# my_button2.pack(pady=20)
 
 def fact(x):
     f = 1
@@ -123,16 +229,14 @@ def write_inst(mem_block, processor, data):
             writeHit += 1
             return i, False
         else:
-            if(processor[i][2] == "I"):
+            if(processor[i][1] == "I"):
                 processor[i][3] = data
                 writeMiss += 1
                 return i, False
-            elif(processor[i][2] == "S" or processor[i][2] == "M"):
+            elif(processor[i][1] == "S" or processor[i][1] == "M"):
                 processor[i][3] = data
                 writeMiss += 1
                 return i, False
-            else:
-                writeMiss += 1
 
 def read_inst(mem_block, processor):
     global readMiss
@@ -175,7 +279,8 @@ def read_inst(mem_block, processor):
         row, inMemory = read_memory(mem_block, processor, i)
         return row, inMemory
 
-def generate_inst(processor):
+def generate_inst(processor, lock):
+    lock.acquire()
     n = randint(1, 20)
     k = randint(1, 10)
     p = randint(0, 5) / randint(5, 10)
@@ -209,10 +314,13 @@ def generate_inst(processor):
         else:
             inst = "P3 " + "CALC"
     print(inst)
+    lock.release()
+    Instructions.append(inst)
     return inst
 
 def firstProcessorL1():
-    inst = generate_inst(P0)
+    lock = Lock()
+    inst = generate_inst(P0, lock)
     instArr = inst.split(" ")
     if(instArr[1] == "READ"):
         row, inMemory = read_inst(instArr[2], P0)
@@ -235,7 +343,8 @@ def firstProcessorL1():
     print('\n')
 
 def secondProcessorL1():
-    inst = generate_inst(P1)
+    lock = Lock()
+    inst = generate_inst(P1, lock)
     instArr = inst.split(" ")
     if(instArr[1] == "READ"):
         row, inMemory = read_inst(instArr[2], P1)
@@ -258,7 +367,8 @@ def secondProcessorL1():
     print('\n')
 
 def thirdProcessorL1():
-    inst = generate_inst(P2)
+    lock = Lock()
+    inst = generate_inst(P2, lock)
     instArr = inst.split(" ")
     if(instArr[1] == "READ"):
         row, inMemory = read_inst(instArr[2], P2)
@@ -281,7 +391,8 @@ def thirdProcessorL1():
     print('\n')
 
 def fourthProcessorL1():
-    inst = generate_inst(P3)
+    lock = Lock()
+    inst = generate_inst(P3, lock)
     instArr = inst.split(" ")
     if(instArr[1] == "READ"):
         row, inMemory = read_inst(instArr[2], P3)
@@ -304,7 +415,7 @@ def fourthProcessorL1():
     print('\n')
 
 def Controlador():
-    print("Se inicia el proceso con: ")
+    print("Se inicia el proceso: ")
     sleep(2)
     print("Caché 1:")
     print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
@@ -335,7 +446,7 @@ def Controlador():
         t4 = Thread(target=fourthProcessorL1, args=[])
         t4.start()
         sleep(10)
-        print("Se finaliza el proceso con: ")
+        print("Se finaliza el proceso: ")
         sleep(1)
         print("Caché 1:")
         print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
@@ -356,43 +467,60 @@ def Controlador():
         print("Memoria:")
         print(Memory)
         print('\n')
+        print(Instructions)
+        my_tree1.item("I001", text=P0[0][0], values=(P0[0][1], P0[0][2], P0[0][3]))
+        my_tree1.item("I002", text=P0[1][0], values=(P0[1][1], P0[1][2], P0[1][3]))
+        my_tree1.item("I003", text=P0[2][0], values=(P0[2][1], P0[2][2], P0[2][3]))
+        my_tree1.item("I004", text=P0[3][0], values=(P0[3][1], P0[3][2], P0[3][3]))
+
+        my_tree2.item("I001", text=P1[0][0], values=(P1[0][1], P1[0][2], P1[0][3]))
+        my_tree2.item("I002", text=P1[1][0], values=(P1[1][1], P1[1][2], P1[1][3]))
+        my_tree2.item("I003", text=P1[2][0], values=(P1[2][1], P1[2][2], P1[2][3]))
+        my_tree2.item("I004", text=P1[3][0], values=(P1[3][1], P1[3][2], P1[3][3]))
+
+        my_tree3.item("I001", text=P2[0][0], values=(P2[0][1], P0[0][2], P0[0][3]))
+        my_tree3.item("I002", text=P2[1][0], values=(P2[1][1], P0[1][2], P0[1][3]))
+        my_tree3.item("I003", text=P2[2][0], values=(P2[2][1], P0[2][2], P0[2][3]))
+        my_tree3.item("I004", text=P2[3][0], values=(P2[3][1], P0[3][2], P0[3][3]))
+
+        my_tree4.item("I001", text=P3[0][0], values=(P0[0][1], P0[0][2], P0[0][3]))
+        my_tree4.item("I002", text=P3[1][0], values=(P0[1][1], P0[1][2], P0[1][3]))
+        my_tree4.item("I003", text=P3[2][0], values=(P0[2][1], P0[2][2], P0[2][3]))
+        my_tree4.item("I004", text=P3[3][0], values=(P0[3][1], P0[3][2], P0[3][3]))
+
+        my_tree5.item("I001", text="0000", values=Memory["0000"])
+        my_tree5.item("I002", text="0001", values=Memory["0001"])
+        my_tree5.item("I003", text="0010", values=Memory["0010"])
+        my_tree5.item("I004", text="0011", values=Memory["0011"])
+        my_tree5.item("I005", text="0100", values=Memory["0100"])
+        my_tree5.item("I006", text="0101", values=Memory["0101"])
+        my_tree5.item("I007", text="0110", values=Memory["0110"])
+        my_tree5.item("I008", text="0111", values=Memory["0111"])
+
+        my_tree6.item("I001", text="P0", values=Instructions[0])
+        my_tree6.item("I002", text="P1", values=Instructions[1])
+        my_tree6.item("I003", text="P2", values=Instructions[2])
+        my_tree6.item("I004", text="P3", values=Instructions[3])
+
+        root.update()
     except:
         print("Error fatal en los threads!")
 
+def cicloControlador():
+    ciclos = 10
+    while(ciclos > 0):
+        Controlador()
+        ciclos -= 1
+
+my_button1 = Button(root, text="Start!", command=Controlador)
+my_button1.place(x=810, y=310)
+
+my_button2 = Button(root, text="Go!", command=cicloControlador)
+my_button2.place(x=810, y=360)
+
 if __name__ == '__main__':
-    # print("Caché 1:")
-    # print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
-    #   for row in P0]))
-    # print('\n')
-    # print("Caché 2:")
-    # print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
-    #   for row in P1]))
-    # print('\n')
-    # print("Caché 3:")
-    # print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
-    #   for row in P2]))
-    # print('\n')
-    # print("Caché 4:")
-    # print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
-    #   for row in P3]))
-    # print('\n')
-    # firstProcessorL1()
-    # print('\n')
-    # print("Caché 1:")
-    # print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
-    #   for row in P0]))
-    # print('\n')
-    # print("Caché 2:")
-    # print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
-    #   for row in P1]))
-    # print('\n')
-    # print("Caché 3:")
-    # print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
-    #   for row in P2]))
-    # print('\n')
-    # print("Caché 4:")
-    # print('\n'.join([' '.join(['{:4}'.format(item) for item in row]) 
-    #   for row in P3]))
-    Controlador()
+    # for child in my_tree5.get_children():
+    #     print(child)
+    root.mainloop()
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
