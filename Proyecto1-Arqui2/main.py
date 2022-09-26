@@ -308,7 +308,7 @@ def read_inst(mem_block, processor):
         if(processor[i][2] == mem_block and processor[i][1] != "I"):
             readHit += 1
             return i, False
-    # De lo contrario consulta a las demás cachés
+    # # De lo contrario consulta a las demás cachés
     else:
         # Busca la dirección de memoria en caché L1 del P0
         # Si la encuentra actualiza los valores correspondientes del procesador
@@ -345,7 +345,7 @@ def read_inst(mem_block, processor):
         # Si no encuentra la dirección de memoria en caché, va a leer de memoria
         else:
             readMiss += 1
-            row, inMemory = read_memory(mem_block, processor, i)
+            row, inMemory = read_memory(mem_block, processor)
             return row, inMemory
 
 def generate_inst(proce, lock):
@@ -406,13 +406,13 @@ def firstProcessorL1():
     lock.acquire()
     if(instArr[1] == "READ"):
         row, inMemory = read_inst(instArr[2], P0)
+        print(row, inMemory)
         state_change(P0[row][1], "Read", P0, row, inMemory)
         state_change(P1[row][1], "ReadCache", P1, row, inMemory)
         state_change(P2[row][1], "ReadCache", P2, row, inMemory)
         state_change(P3[row][1], "ReadCache", P3, row, inMemory)
     elif(instArr[1] == "WRITE"):
         row, inMemory = write_inst(instArr[2], P0, instArr[3])
-        print(row)
         state_change(P0[row][1], "Write", P0, row, inMemory)
         state_change(P1[row][1], "WriteCache", P1, row, inMemory)
         state_change(P2[row][1], "WriteCache", P2, row, inMemory)
@@ -434,6 +434,7 @@ def secondProcessorL1():
     lock.acquire()
     if(instArr[1] == "READ"):
         row, inMemory = read_inst(instArr[2], P1)
+        print(row, inMemory)
         state_change(P0[row][1], "ReadCache", P0, row, inMemory)
         state_change(P1[row][1], "Read", P1, row, inMemory)
         state_change(P2[row][1], "ReadCache", P2, row, inMemory)
@@ -461,6 +462,7 @@ def thirdProcessorL1():
     lock.acquire()
     if(instArr[1] == "READ"):
         row, inMemory = read_inst(instArr[2], P2)
+        print(row, inMemory)
         state_change(P0[row][1], "ReadCache", P0, row, inMemory)
         state_change(P1[row][1], "ReadCache", P1, row, inMemory)
         state_change(P2[row][1], "Read", P2, row, inMemory)
@@ -488,6 +490,7 @@ def fourthProcessorL1():
     lock.acquire()
     if(instArr[1] == "READ"):
         row, inMemory = read_inst(instArr[2], P3)
+        print(row, inMemory)
         state_change(P0[row][1], "ReadCache", P0, row, inMemory)
         state_change(P1[row][1], "ReadCache", P1, row, inMemory)
         state_change(P2[row][1], "ReadCache", P2, row, inMemory)
